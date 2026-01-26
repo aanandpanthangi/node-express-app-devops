@@ -2,38 +2,45 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "anand/nodejs-app"
-        DOCKER_PORT = "3002"
+        IMAGE_NAME = "nodejs-app"        // Docker image name
+        DOCKER_PORT = "3002"             // Port your app exposes
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/<your-username>/<your-repo>.git'
+                // Checkout from GitHub with PAT credential
+                git branch: 'master',
+                    url: 'https://github.com/aanandpanthangi/node-express-app-devops.git',
+                    credentialsId: 'github-pat-nodejs'
+            }
+        }
+
+        stage('Install Dependencies & Run Tests') {
+            steps {
+                sh 'npm install'
+                sh 'npm test || echo "No tests defined yet"'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
+                    // Build Docker image with build number tag
                     docker.build("${IMAGE_NAME}:${env.BUILD_NUMBER}")
                 }
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                sh 'npm install'
-                sh 'npm test || echo "No tests yet"'
             }
         }
 
         stage('Run Docker Container') {
             steps {
                 script {
-                    sh "docker stop nodejs-app || true"
-                    sh "docker rm nodejs-app || true"
-                    sh "docker run -d -p ${DOCKER_PORT}:${DOCKER_PORT} --name nodejs-app ${IMAGE_NAME}:${env.BUILD_NUMBER}"
+                    // Stop old container if exists
+                    sh "docker stop ${IMAGE_NAME} || true"
+                    sh "docker rm ${IMAGE_NAME} || true"
+
+                    // Run new container
+                    sh "docker run -d -p ${DOCKER_PORT}:${DOCKER_PORT} --name ${IMAGE_NAME} ${IMAGE_NAME}:${env.BUILD_NUMBER}"
                 }
             }
         }
@@ -41,10 +48,10 @@ pipeline {
 
     post {
         success {
-            echo "Build and Docker container deployed successfully!"
+            echo "✅ Build and Docker container deployed successfully!"
         }
         failure {
-            echo "Build failed. Check Jenkins logs."
+            echo "❌ Build failed. Check Jenkins logs for details."
         }
     }
 }
