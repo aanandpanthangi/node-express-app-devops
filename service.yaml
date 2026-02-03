@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodejs-app-service
+spec:
+  type: NodePort                 # Exposes the app outside the cluster
+  selector:
+    app: nodejs-app
+  ports:
+    - protocol: TCP
+      port: 80                   # External port you access in browser
+      targetPort: 3002            # Container port (matches Deployment)
+      nodePort: 30002             # Node port to access externally
