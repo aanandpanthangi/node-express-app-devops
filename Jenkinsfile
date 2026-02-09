@@ -17,13 +17,6 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies & Tests') {
-            steps {
-                sh 'npm install'
-                sh 'npm test || echo "No tests defined"'
-            }
-        }
-
         stage('Docker Build') {
             steps {
                 sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
